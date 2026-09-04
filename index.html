@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Бригада | Производственная база</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <style>
+    @media (max-width: 600px) {
+      html, body { width: 100%; min-width: 0; overflow-x: hidden; }
+      .app-shell { display: flex !important; width: 100% !important; min-width: 0 !important; }
+      .sidebar { display: block !important; position: relative !important; width: 58px !important; min-width: 58px !important; max-width: 58px !important; flex: 0 0 58px !important; padding: 22px 7px !important; overflow: hidden !important; }
+      .brand { margin: 0 0 42px !important; justify-content: center !important; }
+      .brand-mark { width: 34px !important; height: 34px !important; }
+      .brand > div, .sidebar-label, .sidebar-bottom { display: none !important; }
+      .nav-list { width: 44px !important; }
+      .nav-item { width: 44px !important; height: 44px !important; padding: 0 !important; margin: 0 0 7px !important; justify-content: center !important; gap: 0 !important; font-size: 0 !important; overflow: hidden !important; }
+      .nav-item .nav-icon { display: block !important; width: auto !important; font-size: 19px !important; line-height: 1 !important; }
+      .nav-item b { display: none !important; }
+      .main-content { display: block !important; width: calc(100% - 58px) !important; min-width: 0 !important; max-width: none !important; flex: 1 1 auto !important; padding: 0 12px 32px !important; overflow: hidden !important; }
+      .topbar, .page-heading, .toolbar, .content-view { width: 100% !important; min-width: 0 !important; }
+      .page-heading h1 { font-family: "Space Grotesk", Manrope, Arial, sans-serif !important; font-size: 30px !important; line-height: 1.05 !important; }
+      .part-tile { width: 100% !important; min-width: 0 !important; }
+    }
+  </style>
+  <style>@media(max-width:600px){body{overflow-x:hidden}.sidebar{width:58px;flex:0 0 58px}.main-content{min-width:0;width:calc(100vw - 58px);padding:0 12px 32px}.topbar{gap:8px}.breadcrumbs{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top-actions{gap:7px}.role-label{display:none}.role-switcher select{max-width:96px;padding:7px 20px 7px 7px;font-size:10px}.page-heading{padding:25px 0 20px;gap:15px;align-items:flex-start;flex-direction:column}.page-heading h1{font-size:30px}.page-heading .primary-btn{width:100%}.toolbar{display:grid;grid-template-columns:1fr 92px;gap:7px}.search-box{grid-column:1/-1;width:100%;max-width:none}.toolbar select{width:100%;min-width:0}.parts-grid{grid-template-columns:1fr;gap:10px}.part-tile{min-height:130px;padding:17px}.machine-row{grid-template-columns:1fr;padding:16px;gap:12px}.machine-row .card-actions{justify-content:flex-start}.stats-grid{grid-template-columns:1fr}.stat-card:last-child{grid-column:auto}.modal-backdrop{padding:8px}.modal,.workflow-modal{width:100%;max-height:94vh;padding:19px 15px}.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}.table-fixture-grid{grid-template-columns:1fr}.tools-editor-head{align-items:flex-start;flex-direction:column}.tools-editor-head .secondary-btn{width:100%}.tool-row{grid-template-columns:65px 1fr 29px}.tool-row .tool-detail{grid-column:1/-1}.mode-choice{grid-template-columns:1fr}.quick-row{grid-template-columns:27px 1fr;gap:9px}.quick-row b{grid-column:2;text-align:left;overflow-wrap:anywhere}.coordinate-table{display:block;overflow-x:auto;white-space:nowrap;width:100%;margin-left:0}.check-step{grid-template-columns:46px 1fr;gap:10px}.tool-check-list>div{grid-template-columns:42px 1fr}.tool-check-list b{grid-column:2;text-align:left}.measurement-row{grid-template-columns:42px 1fr 1fr}.measurement-row span{grid-column:2/-1}}</style>
+  <style>body{font-family:Manrope,Arial,sans-serif}.page-heading h1,.section-heading h2,.part-tile h3,.modal h2,.workflow-head h2,.check-step h3,.machine-row h3{font-family:"Space Grotesk",Manrope,Arial,sans-serif}@media(max-width:600px){.page-heading{padding-top:18px}.page-heading h1{font-size:32px;line-height:1.05;margin:0}.eyebrow{line-height:1.35}.subtitle{margin-top:7px}.section-heading{margin-bottom:11px}.section-heading h2{line-height:1.15}.part-tile h3{line-height:1.15}.nav-item{font-size:12px}.topbar{height:64px}}</style>
+  <style>@media(max-width:600px){.role-switcher select{width:124px!important;min-width:124px!important;max-width:124px!important}}</style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">Б</span><div><strong>БРИГАДА</strong><span>цеховая база</span></div></div>
+      <div class="sidebar-label">РАЗДЕЛЫ</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="parts"><span class="nav-icon">◫</span> Детали <b id="partsCount">0</b></button>
+        <button class="nav-item" data-view="machines"><span class="nav-icon">▦</span> Станки <b id="machinesCount">0</b></button>
+        <button class="nav-item" data-view="statistics"><span class="nav-icon">◒</span> Статистика</button>
+        <button class="nav-item" data-view="defects"><span class="nav-icon">▤</span> Брак</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="status-card"><span class="live-dot"></span><div><strong>Локальная база</strong><small>Данные на этом устройстве</small></div></div>
+        <button class="reset-link" id="resetData">↺ Сбросить демо-данные</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Цех /</span> Производственная база</div>
+        <div class="top-actions">
+          <div class="role-switcher"><span class="role-label">Режим доступа</span><select id="roleSelect"><option value="operator">Оператор</option><option value="setter">Наладчик</option></select></div>
+          <div class="avatar" id="avatar">ОП</div>
+        </div>
+      </header>
+
+      <section class="page-heading">
+        <div><p class="eyebrow">АКТУАЛЬНАЯ ИНФОРМАЦИЯ · <span id="today"></span></p><h1>Детали</h1><p class="subtitle">Всё, что нужно для запуска станка, в одном месте.</p></div>
+        <button class="primary-btn setter-only" id="addPartBtn">＋ Добавить деталь</button>
+      </section>
+
+      <section class="toolbar"><div class="search-box"><span>⌕</span><input id="searchInput" placeholder="Поиск по названию или коду детали" /></div><select id="machineFilter"><option value="all">Все станки</option></select><button class="filter-btn" id="clearSearch">Очистить</button></section>
+      <section id="partsView" class="content-view"><div class="section-heading"><div><h2>Выберите деталь</h2><span id="resultsLabel">0 записей</span></div><span class="permission-hint" id="permissionHint">Нажмите на деталь, чтобы начать проверку</span></div><div class="parts-grid" id="partsGrid"></div></section>
+      <section id="machinesView" class="content-view hidden"><div class="section-heading"><div><h2>Станки и программы</h2><span>Рабочие ячейки цеха</span></div><button class="primary-btn setter-only hidden" id="addMachineBtn">＋ Добавить станок</button></div><div class="machine-list" id="machineList"></div></section>
+      <section id="statisticsView" class="content-view hidden"><div class="section-heading"><div><h2>Статистика цеха</h2><span>Текущее состояние производственной базы</span></div></div><div class="stats-grid statistics-grid"><div class="stat-card"><span>ДЕТАЛЕЙ В БАЗЕ</span><strong id="statParts">0</strong><small>активных записей</small></div><div class="stat-card"><span>СТАНКОВ В ЦЕХЕ</span><strong id="statMachines">0</strong><small>с актуальными программами</small></div><div class="stat-card accent"><span>ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ</span><strong id="statUpdated">сегодня</strong><small>данные синхронизированы</small></div></div><div class="stats-note">Все сведения доступны только для просмотра. Изменения вносит наладчик в карточке детали.</div></section>
+      <section id="defectsView" class="content-view hidden"><div class="section-heading"><div><h2>Учёт брака</h2><span>Записи по деталям и датам</span></div></div><form id="defectForm" class="defect-form"><label>Дата<input required type="date" id="defectDate"></label><label>Деталь<select required id="defectPart"></select></label><label>Код детали<input readonly id="defectCode"></label><label>Литейный брак<input min="0" step="1" type="number" value="0" required id="foundryDefect"></label><label>Кузнечный брак<input min="0" step="1" type="number" value="0" required id="forgingDefect"></label><label>Механический брак<input min="0" step="1" type="number" value="0" required id="mechanicalDefect"></label><label class="defect-explanation">Пояснение причины брака<textarea required id="defectExplanation" placeholder="Например: трещина после литья, смещение отверстия..."></textarea></label><button type="submit" class="primary-btn" id="defectSubmit">＋ Добавить запись</button></form><div class="defect-journal"><div class="section-heading"><div><h2>Журнал брака</h2><span id="defectResultsLabel">0 записей</span></div></div><div class="defect-table-wrap"><table class="defect-table"><thead><tr><th>Дата</th><th>Деталь</th><th>Код</th><th>Литейный</th><th>Кузнечный</th><th>Механический</th><th>Пояснение</th><th>Действия</th></tr></thead><tbody id="defectRows"></tbody></table></div></div></section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop"><div class="modal"><div class="modal-head"><div><p class="eyebrow">КАРТОЧКА ДЕТАЛИ</p><h2 id="modalTitle">Новая деталь</h2></div><button class="close-btn" id="closeModal">×</button></div><form id="partForm"><input type="hidden" id="partId"><div class="form-grid"><label>Станок<select required id="partMachine"></select><button type="button" class="remove-part-machine secondary-btn">Убрать станок из детали</button></label><label>Название детали<input required id="partName" placeholder="Например, Кронштейн 12" /></label><label>Код детали<input required id="partCode" placeholder="Например, KR-012" /></label><label>Название программы<input required id="partProgram" placeholder="Например, KR_012_V3" /></label><div class="wide tools-editor"><div class="tools-editor-head"><label>Инструменты и ячейки магазина</label><button type="button" class="secondary-btn" id="addToolBtn">＋ Добавить инструмент</button></div><p class="field-note">Инструмент копируется на новый станок, ячейку можно изменить отдельно.</p><div id="toolRows"></div></div><div class="wide table-fixture-editor"><label>Столы и приспособления детали</label><div class="table-fixture-grid"><label>Стол 1<input id="partTable1Fixture" placeholder="Номер приспособы или пусто" /></label><label>Стол 2<input id="partTable2Fixture" placeholder="Номер приспособы или пусто" /></label></div></div><div class="wide zero-editor"><div class="tools-editor-head"><label>Нулевые координаты детали</label></div><p class="field-note">Рабочие нули в формате экрана станка. Заполняйте значения в режиме наладчика.</p><div id="coordinateRows"></div></div></div><div class="form-actions"><button type="button" class="secondary-btn" id="cancelModal">Отмена</button><button type="submit" class="primary-btn">Сохранить деталь</button></div></form></div></div>
+  <div class="modal-backdrop hidden" id="workflowBackdrop"><div class="workflow-modal"><div class="workflow-head"><div><p class="eyebrow">ПОДГОТОВКА К ЗАПУСКУ</p><h2 id="workflowTitle">Деталь</h2><span id="workflowCode"></span></div><button class="close-btn" id="closeWorkflow">×</button></div><div class="machine-choice"><label>Выберите станок</label><div class="machine-buttons" id="workflowMachines"></div><div id="workflowMachineInfo"></div></div><div class="mode-choice"><button class="mode-card active" data-mode="quick"><strong>Быстрая проверка</strong><span>Все данные детали сразу</span></button><button class="mode-card" data-mode="setter"><strong>Режим наладки</strong><span>Пошаговый чеклист запуска</span></button></div><div id="workflowBody"></div></div></div>
+  <div class="modal-backdrop hidden" id="machineModalBackdrop"><div class="modal"><div class="modal-head"><div><p class="eyebrow">КАРТОЧКА СТАНКА</p><h2 id="machineModalTitle">Новый станок</h2></div><button class="close-btn" id="closeMachineModal">×</button></div><form id="machineForm"><input type="hidden" id="machineId"><div class="form-grid"><label>Название станка<input required id="machineName" /></label><label>Номер станка<input required id="machineNumber" /></label></div><div class="form-actions"><button type="button" class="secondary-btn" id="cancelMachineModal">Отмена</button><button type="submit" class="primary-btn">Сохранить станок</button></div></form></div></div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
