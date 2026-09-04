@@ -31,7 +31,8 @@
   <style>@media(max-width:600px){.role-switcher select{width:124px!important;min-width:124px!important;max-width:124px!important}}</style>
 </head>
 <body>
-  <div class="app-shell">
+  <section class="auth-view" id="authView"><div class="auth-card"><span class="brand-mark">Б</span><p class="eyebrow">ЗАКРЫТАЯ БАЗА ЦЕХА</p><h1>Вход в бригаду</h1><p id="authMessage">Войдите по логину и паролю, чтобы открыть данные.</p><form id="authForm"><label>Логин<input required type="email" id="authEmail" autocomplete="username" placeholder="name@example.com"></label><label>Пароль<input required type="password" id="authPassword" autocomplete="current-password" placeholder="Пароль"></label><button class="primary-btn" type="submit">Войти</button></form></div></section>
+  <div class="app-shell hidden" id="appShell">
     <aside class="sidebar">
       <div class="brand"><span class="brand-mark">Б</span><div><strong>БРИГАДА</strong><span>цеховая база</span></div></div>
       <div class="sidebar-label">РАЗДЕЛЫ</div>
@@ -52,7 +53,7 @@
         <div class="breadcrumbs"><span>Цех /</span> Производственная база</div>
         <div class="top-actions">
           <div class="role-switcher"><span class="role-label">Режим доступа</span><select id="roleSelect"><option value="operator">Оператор</option><option value="setter">Наладчик</option></select></div>
-          <div class="avatar" id="avatar">ОП</div>
+          <span class="auth-user" id="authUser"></span><button class="secondary-btn logout-btn" id="logoutBtn" type="button">Выйти</button><div class="avatar" id="avatar">ОП</div>
         </div>
       </header>
 
@@ -73,6 +74,9 @@
   <div class="modal-backdrop hidden" id="workflowBackdrop"><div class="workflow-modal"><div class="workflow-head"><div><p class="eyebrow">ПОДГОТОВКА К ЗАПУСКУ</p><h2 id="workflowTitle">Деталь</h2><span id="workflowCode"></span></div><button class="close-btn" id="closeWorkflow">×</button></div><div class="machine-choice"><label>Выберите станок</label><div class="machine-buttons" id="workflowMachines"></div><div id="workflowMachineInfo"></div></div><div class="mode-choice"><button class="mode-card active" data-mode="quick"><strong>Быстрая проверка</strong><span>Все данные детали сразу</span></button><button class="mode-card" data-mode="setter"><strong>Режим наладки</strong><span>Пошаговый чеклист запуска</span></button></div><div id="workflowBody"></div></div></div>
   <div class="modal-backdrop hidden" id="machineModalBackdrop"><div class="modal"><div class="modal-head"><div><p class="eyebrow">КАРТОЧКА СТАНКА</p><h2 id="machineModalTitle">Новый станок</h2></div><button class="close-btn" id="closeMachineModal">×</button></div><form id="machineForm"><input type="hidden" id="machineId"><div class="form-grid"><label>Название станка<input required id="machineName" /></label><label>Номер станка<input required id="machineNumber" /></label></div><div class="form-actions"><button type="button" class="secondary-btn" id="cancelMachineModal">Отмена</button><button type="submit" class="primary-btn">Сохранить станок</button></div></form></div></div>
   <div class="toast" id="toast"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
