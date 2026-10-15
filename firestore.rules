@@ -10,7 +10,7 @@ service cloud.firestore {
     function setter() {
       return request.auth != null && (request.auth.token.email == 'egor.novoselisev@gmail.com'
         || (get(/databases/$(database)/documents/users/$(request.auth.token.email.split('@')[0])).data.active == true
-          && get(/databases/$(database)/documents/users/$(request.auth.token.email.split('@')[0])).data.role == 'setter'));
+          && get(/databases/$(database)/documents/users/$(request.auth.token.email.split('@')[0])).data.role in ['setter', 'foreman']));
     }
     match /appData/{document} {
       allow read: if request.auth != null;
@@ -22,8 +22,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null
-        && request.auth.token.email == 'egor.novoselisev@gmail.com';
+      allow create, update, delete: if request.auth != null && (request.auth.token.email == 'egor.novoselisev@gmail.com' || (get(/databases/$(database)/documents/users/$(request.auth.token.email.split('@')[0])).data.active == true && get(/databases/$(database)/documents/users/$(request.auth.token.email.split('@')[0])).data.role == 'foreman'));
     }
   }
 }
