@@ -63,6 +63,7 @@ function render(){
   $('partsGrid').innerHTML = filtered.length ? filtered.map(partCard).join('') : '<div class="empty-state">По вашему запросу ничего не найдено.</div>';
   const machines=sortedMachines(); const current = $('machineFilter').value; $('machineFilter').innerHTML = '<option value="all">Все станки</option>' + machines.map(m => `<option value="${m.id}">${m.number} · ${m.name}</option>`).join(''); $('machineFilter').value = data.machines.some(m => m.id === current) ? current : 'all';
   $('partMachine').innerHTML = machines.map(m => `<option value="${m.id}">${m.number} · ${m.name}</option>`).join(''); $('machineList').innerHTML = machines.map(m => `<article class="machine-row"><div><h3>${m.name}</h3><p>Станок ${m.number}</p></div>${canEditProduction() ? `<div class="card-actions"><button class="icon-btn edit-machine-btn" data-id="${m.id}">Изменить</button><button class="icon-btn delete-machine-btn" data-id="${m.id}">Удалить</button></div>` : ''}</article>`).join('');
+  updatePageHeading();
   renderDefects();
   document.querySelectorAll('.admin-only').forEach(element=>element.classList.toggle('hidden',!canEditProduction())); $('userManagement').classList.toggle('hidden',!canManageUsers()); renderUsers(); renderToolTypes();
 }
@@ -227,3 +228,14 @@ function taskAuthorName(task){
 
 function canEditProduction(){return ['setter','foreman'].includes(role);}
 function canManageUsers(){return cloudUser?.email?.toLowerCase()===adminEmail||role==='foreman';}
+
+function updatePageHeading(){
+ const view=document.querySelector('.nav-item.active')?.dataset.view||'parts';
+ const headings={parts:['Детали','Всё, что нужно для запуска станка, в одном месте.'],tasks:['Задания','План работы и задания по станкам.'],machines:['Станки','Станки и рабочие ячейки цеха.'],statistics:['Статистика','Текущее состояние производственной базы.'],defects:['Брак','Учёт брака по деталям и датам.'],admin:['Пользователи и инструменты','Сотрудники, права доступа и типы инструмента.']};
+ const [title,subtitle]=headings[view]||headings.parts;
+ document.querySelector('.page-heading h1').textContent=title;
+ document.querySelector('.page-heading .subtitle').textContent=subtitle;
+ $('addPartBtn').classList.toggle('hidden',view!=='parts'||!canEditProduction());
+}
+document.querySelectorAll('.nav-item').forEach(button=>button.addEventListener('click',updatePageHeading));
+updatePageHeading();
