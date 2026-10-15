@@ -1,7 +1,7 @@
 const PUSH_API='https://brigada-push.egor-novoselisev.workers.dev';
 let pushBusy=false;
 function supportsPush(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
-async function pushRequest(path,body){if(!cloudUser)throw Error('Сначала войдите');const token=await cloudUser.getIdToken();const r=await fetch(PUSH_API+path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw Error('Сервер уведомлений недоступен');return r.json();}
+async function pushRequest(path,body){if(!cloudUser)throw Error('Сначала войдите');const token=await cloudUser.getIdToken();const r=await fetch(PUSH_API+path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});const result=await r.json();if(!r.ok)throw Error(result.error||'Сервер уведомлений недоступен');return result;}
 function decodePushKey(value){return Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));}
 async function pushRegistration(){await navigator.serviceWorker.register('./sw.js');return navigator.serviceWorker.ready;}
 async function syncPushState(){
