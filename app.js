@@ -167,13 +167,13 @@ function renderTasks(){
   $('taskMachine').innerHTML=sortedMachines().map(m=>`<option value="${escapeHtml(m.id)}">${escapeHtml(m.number+' · '+m.name)}</option>`).join('');
   if(data.machines.some(m=>m.id===selected))$('taskMachine').value=selected;
 
-  $('taskList').innerHTML=assignments.slice().sort((a,b)=>a.when.localeCompare(b.when)).map(t=>`<article class="assignment-card"><div><small>${escapeHtml(machineById(t.machineId)?.number||'Станок удалён')} · ${escapeHtml(t.when.replace('T',' '))}</small><h3>${escapeHtml(t.text)}</h3><span>${escapeHtml(t.author)}${t.done?' · Выполнено':''}</span></div>${canEdit?`<div><button class="secondary-btn" data-task-done="${t.id}">${t.done?'Вернуть':'Выполнено'}</button> <button class="secondary-btn" data-task-delete="${t.id}">Удалить</button></div>`:''}</article>`).join('')||'<div class="empty-state">Заданий пока нет</div>';
+  $('taskList').innerHTML=assignments.slice().sort((a,b)=>a.when.localeCompare(b.when)).map(t=>`<article class="assignment-card"><div><small>${escapeHtml(machineById(t.machineId)?.number||'Станок удалён')} · ${escapeHtml(t.when.replace('T',' '))}</small><h3>${escapeHtml(t.text)}</h3><span>${escapeHtml(taskAuthorName(t))}${t.done?' · Выполнено':''}</span></div>${canEdit?`<div><button class="secondary-btn" data-task-done="${t.id}">${t.done?'Вернуть':'Выполнено'}</button> <button class="secondary-btn" data-task-delete="${t.id}">Удалить</button></div>`:''}</article>`).join('')||'<div class="empty-state">Заданий пока нет</div>';
 }
 async function mutateTask(action){
   if(!['setter','foreman'].includes(role)||!cloudReady||!navigator.onLine){toast('Для записи подключитесь к интернету');return;}
   try{await cloudDb.runTransaction(async tx=>{const snapshot=await tx.get(extraRef);const items=snapshot.data()?.items||[];tx.set(extraRef,{items:action(items)});});}catch(error){toast(firebaseErrorMessage(error));}
 }
-$('taskForm').addEventListener('submit',event=>{event.preventDefault();const text=$('taskText').value.trim(),machineId=$('taskMachine').value,when=$('taskWhen').value;if(!text||!machineId||!when)return;mutateTask(items=>[...items,{id:crypto.randomUUID(),text,machineId,when,author:cloudUser.email,done:false}]);});
+$('taskForm').addEventListener('submit',event=>{event.preventDefault();const text=$('taskText').value.trim(),machineId=$('taskMachine').value,when=$('taskWhen').value;if(!text||!machineId||!when)return;mutateTask(items=>[...items,{id:crypto.randomUUID(),text,machineId,when,author:cloudUser.email,authorName:taskAuthorName({author:cloudUser.email}),done:false}]);});
 document.addEventListener('click',event=>{const done=event.target.dataset.taskDone,remove=event.target.dataset.taskDelete;if(done)mutateTask(items=>items.map(t=>t.id===done?{...t,done:!t.done}:t));if(remove&&confirm('Удалить задание?'))mutateTask(items=>items.filter(t=>t.id!==remove));});
 $('tasksNav').addEventListener('click',()=>{document.querySelectorAll('.content-view').forEach(el=>el.classList.toggle('hidden',el.id!=='tasksView'));document.querySelector('.toolbar').classList.add('hidden');});
 function photoKey(tool){return tool.photoId||null;}
@@ -218,3 +218,9 @@ document.addEventListener('click',event=>{
  const edit=event.target.closest('.delete-btn,.delete-machine-btn,.edit-btn,.edit-machine-btn,.remove-part-machine,#addPartBtn,#addMachineBtn,#resetData,.delete-defect-btn,.edit-defect-btn,.edit-tool-type-btn,.delete-tool-type-btn,.edit-user-btn,.delete-user-btn');
  if(edit&&(!cloudReady||!navigator.onLine)){event.preventDefault();event.stopImmediatePropagation();toast('Для изменений подключитесь к интернету');}
 },true);
+
+function taskAuthorName(task){
+ const email=String(task.author||'').toLowerCase();
+ const user=Object.values(data.users||{}).find(user=>String(user.email||`${user.code}@gezbrigada.local`).toLowerCase()===email);
+ return user?.name?.trim() || task.authorName || (email===adminEmail?'Егор':email.endsWith('@gezbrigada.local')?'Сотрудник '+email.split('@')[0]:'Сотрудник');
+}
