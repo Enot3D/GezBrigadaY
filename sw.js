@@ -1,5 +1,8 @@
-const CACHE='brigada-shell-v12';
-const ASSETS=['./','./index.html','./styles.css?v=9','./app.js?v=12','https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'];
+const CACHE='brigada-shell-v13';
+const ASSETS=['./','./index.html','./styles.css?v=9','./app.js?v=13','./push.js?v=13','https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('brigada-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||!ASSETS.some(asset=>new URL(asset,self.registration.scope).href===event.request.url))return;event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request)));});
+
+self.addEventListener('push',event=>{event.waitUntil((async()=>{let data={};try{data=event.data?.json()||{};}catch{}await self.registration.showNotification(data.title||'Бригада · новое задание',{body:data.body||'Откройте задания по станкам',tag:data.tag||'brigada-task',icon:'./icon-180.png',data:{url:'https://enot3d.github.io/GezBrigadaY/'}});})());});
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil((async()=>{const url='https://enot3d.github.io/GezBrigadaY/';const windows=await clients.matchAll({type:'window',includeUncontrolled:true});const existing=windows.find(client=>client.url.startsWith(url));if(existing){existing.postMessage({type:'OPEN_TASKS'});await existing.focus();}else await clients.openWindow(url+'#tasks');})());});

@@ -1,0 +1,16 @@
+{
+  "name": "brigada-push",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-15",
+  "account_id": "667c8d2038a1052710bfd509720d66f1",
+  "workers_dev": true,
+  "kv_namespaces": [
+    {
+      "binding": "PUSH",
+      "id": "bbadc6e791974a2280fbe3b89904b9bc"
+    }
+  ],
+  "vars": {
+    "VAPID_PUBLIC_KEY": "BNpaCQtbFr6JN4bc9xA4VF-VoE9jl-c_7RpV0_T5lmRKjPymDl95s8G3N0x-CAMYxp2HsIbur4UlwsLVq1Q3vcA"
+  }
+}

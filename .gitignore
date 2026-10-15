@@ -13,3 +13,9 @@ firebase-debug.*.log
 .env
 .env.*
 !.env.example
+
+# Push deployment secrets
+**/vapid-private.json
+**/.dev.vars
+**/.wrangler/
+**/node_modules/

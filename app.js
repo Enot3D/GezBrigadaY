@@ -134,7 +134,7 @@ $('authForm').addEventListener('submit',async event=>{
  finally{button.disabled=false;}
 });
 syncLoginFields();
-cloudAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error=>toast(`Не удалось сохранить вход: ${firebaseErrorMessage(error)}`)).then(()=>cloudAuth.onAuthStateChanged(async user=>{cloudUser=user; cloudReady=false; if(!user){stopProduction?.();stopAssignments?.();showAuth();return;} $('authUser').textContent=user.email; showCachedApp(user); try{await loadCloudData(); cacheIdentity(user); startLiveData();}catch(error){showAuth(firebaseErrorMessage(error)); toast(firebaseErrorMessage(error));} }));
+cloudAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error=>toast(`Не удалось сохранить вход: ${firebaseErrorMessage(error)}`)).then(()=>cloudAuth.onAuthStateChanged(async user=>{cloudUser=user; cloudReady=false; if(!user){stopProduction?.();stopAssignments?.();showAuth();return;} $('authUser').textContent=user.email; showCachedApp(user); try{await loadCloudData(); cacheIdentity(user); startLiveData(); syncPushState();}catch(error){showAuth(firebaseErrorMessage(error)); toast(firebaseErrorMessage(error));} }));
 
 
 const extraRef=cloudDb.collection('appData').doc('assignments');
@@ -171,7 +171,7 @@ function renderTasks(){
 }
 async function mutateTask(action){
   if(!['setter','foreman'].includes(role)||!cloudReady||!navigator.onLine){toast('Для записи подключитесь к интернету');return;}
-  try{await cloudDb.runTransaction(async tx=>{const snapshot=await tx.get(extraRef);const items=snapshot.data()?.items||[];tx.set(extraRef,{items:action(items)});});}catch(error){toast(firebaseErrorMessage(error));}
+  try{let created=[];await cloudDb.runTransaction(async tx=>{const snapshot=await tx.get(extraRef);const items=snapshot.data()?.items||[];const next=action(items);created=next.filter(t=>!items.some(old=>old.id===t.id)).map(t=>t.id);tx.set(extraRef,{items:next});});for(const id of created)await queueTaskPush(id);}catch(error){toast(firebaseErrorMessage(error));}
 }
 $('taskForm').addEventListener('submit',event=>{event.preventDefault();const text=$('taskText').value.trim(),machineId=$('taskMachine').value,when=$('taskWhen').value;if(!text||!machineId||!when)return;mutateTask(items=>[...items,{id:crypto.randomUUID(),text,machineId,when,author:cloudUser.email,authorName:taskAuthorName({author:cloudUser.email}),done:false}]);});
 document.addEventListener('click',event=>{const done=event.target.dataset.taskDone,remove=event.target.dataset.taskDelete;if(done)mutateTask(items=>items.map(t=>t.id===done?{...t,done:!t.done}:t));if(remove&&confirm('Удалить задание?'))mutateTask(items=>items.filter(t=>t.id!==remove));});
