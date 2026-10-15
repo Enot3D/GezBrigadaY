@@ -5,8 +5,8 @@ async function pushRequest(path,body){if(!cloudUser)throw Error('Сначала 
 function decodePushKey(value){return Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));}
 async function pushRegistration(){await navigator.serviceWorker.register('./sw.js');return navigator.serviceWorker.ready;}
 async function syncPushState(){
- if(!supportsPush()){$('pushToggle').textContent='Push недоступны';return;}
- try{const registration=await pushRegistration();const subscription=await registration.pushManager.getSubscription();$('pushToggle').textContent=subscription?'🔔 Уведомления включены':'🔔 Включить уведомления';if(subscription&&cloudUser)await pushRequest('/subscribe',{subscription:subscription.toJSON()});await flushPushOutbox();}catch{} 
+ if(!supportsPush()){setPushButton(false,'Push-уведомления недоступны в этом браузере');return;}
+ try{const registration=await pushRegistration();const subscription=await registration.pushManager.getSubscription();setPushButton(Boolean(subscription),subscription?'Уведомления включены — нажмите, чтобы отключить':'Уведомления выключены — нажмите, чтобы включить');if(subscription&&cloudUser)await pushRequest('/subscribe',{subscription:subscription.toJSON()});await flushPushOutbox();}catch{} 
  if(location.hash==='#tasks')$('tasksNav').click();
 }
 $('pushToggle').addEventListener('click',async()=>{
@@ -27,3 +27,6 @@ async function flushPushOutbox(){if(flushingPush||!cloudUser||!navigator.onLine)
 window.addEventListener('online',()=>{syncPushState();});
 navigator.serviceWorker?.addEventListener('message',event=>{if(event.data?.type==='OPEN_TASKS')$('tasksNav').click();});
 $('logoutBtn').addEventListener('click',async event=>{event.stopImmediatePropagation();try{if(supportsPush()){const registration=await navigator.serviceWorker.getRegistration();const subscription=await registration?.pushManager.getSubscription();if(subscription){try{await pushRequest('/unsubscribe',{endpoint:subscription.endpoint});}finally{await subscription.unsubscribe();}}}}catch{toast('Не удалось отключить push на сервере. Отключите уведомления сайта в настройках браузера.');}finally{await cloudAuth.signOut();}},true);
+
+function setPushButton(enabled,label){const button=$('pushToggle');button.textContent=enabled?'🔔':'🔕';button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(enabled));}
+setPushButton(false,'Включить уведомления');
