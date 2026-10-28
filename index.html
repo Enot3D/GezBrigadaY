@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
   <title>Бригада | Производственная база</title>
-  <link rel="manifest" href="manifest.json?v=15" />
+  <link rel="manifest" href="manifest.json?v=16" />
   <meta name="theme-color" content="#182321" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Бригада" />
@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=17" />
+  <link rel="stylesheet" href="styles.css?v=19" />
   <style>
     @media (max-width: 600px) {
       html, body { width: 100%; min-width: 0; overflow-x: hidden; }
@@ -85,6 +85,26 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="app.js?v=14"></script><script src="push.js?v=18"></script>
+  <script src="app.js?v=19"></script><script src="push.js?v=19"></script>
+<script>
+(function(){
+ if(!('serviceWorker' in navigator))return;
+ let refreshing=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{
+  if(refreshing)return;
+  refreshing=true;
+  // Reload only once when a newly installed worker takes control.
+  location.reload();
+ });
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.ready.then(registration=>{
+   registration.update().catch(()=>{});
+   document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden)registration.update().catch(()=>{});
+   });
+  }).catch(()=>{});
+ });
+})();
+</script>
 </body>
 </html>
