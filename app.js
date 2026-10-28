@@ -33,7 +33,7 @@ function machinesForPart(part){ const excluded=new Set(part.excludedMachineIds |
 function configFor(part,machineId){ const existing=part.machineConfigs?.[machineId]; if(existing)return existing; const source=part.machineConfigs?.[part.machineId] || {program:part.program,tools:part.tools,tool:part.tool,cell:part.cell}; if(machineId===part.machineId)return {...source,table1Fixture:part.table1Fixture,table2Fixture:part.table2Fixture,zero:part.zero,coordinates:part.coordinates}; return {program:machineById(machineId)?.program || '',tools:(source.tools || toolList(source)).map(tool=>({...tool})),tool:source.tool || '',cell:source.cell || '',table1Fixture:'',table2Fixture:'',zero:'G54 · X0.000 Y0.000 Z0.000',coordinates:blankCoordinates.map(coordinate=>({...coordinate}))}; }
 function saveMachineConfig(part,machineId,config){ part.machineConfigs={...(part.machineConfigs || {}),[machineId]:config}; }
 // Photos belong to a tool within a part, not to its machine magazine position.
-function toolPhotoIdentity(tool){return [String(tool.type||'').trim().toLowerCase(),String(tool.detail||'').trim().toLowerCase().replace(/,/g,'.').replace(/\\s+/g,' ')].join('|');}
+function toolPhotoIdentity(tool){return [String(tool.type||'').trim().toLowerCase(),String(tool.detail||'').trim().toLowerCase().replace(/,/g,'.').replace(/\s+/g,' ')].join('|');}
 function sharedToolPhoto(part,tool){
  const identity=toolPhotoIdentity(tool);
  const sources=[part.tools,...Object.values(part.machineConfigs||{}).map(config=>config.tools)];
