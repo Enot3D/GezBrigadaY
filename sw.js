@@ -1,5 +1,5 @@
-const CACHE='brigada-shell-v19';
-const ASSETS=['./manifest.json?v=16','./icon-180.png','./','./index.html','./styles.css?v=19','./app.js?v=19','./push.js?v=19','https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'];
+const CACHE='brigada-shell-v20';
+const ASSETS=['./manifest.json?v=16','./icon-180.png','./','./index.html','./styles.css?v=19','./app.js?v=20','./push.js?v=19','https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js','https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('brigada-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 // Always check the network for navigation and app assets; cache is an offline fallback.
