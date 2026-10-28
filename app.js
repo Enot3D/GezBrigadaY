@@ -199,7 +199,80 @@ async function compressPhoto(file){
  const bitmap=await createImageBitmap(file);const scale=Math.min(1,1000/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
  let image;for(const quality of [.8,.65,.5,.35]){image=canvas.toDataURL('image/jpeg',quality);if(image.length<240000)return image;}throw new Error('Фото слишком сложное. Выберите более простой снимок.');
 }
-$('photoUpload').addEventListener('change',async event=>{const file=event.target.files[0];if(!file||!selectedPhotoTool)return;if(!canEditProduction()||!cloudReady||!navigator.onLine){toast('Загрузка доступна наладчику с интернетом');return;}event.target.disabled=true;try{const image=await compressPhoto(file);const key=selectedPhotoTool.photoId||crypto.randomUUID();await cloudDb.collection('appData').doc('photo-'+key).set({image,updatedBy:cloudUser.email});const config=configFor(workflowPart,workflowMachineId);config.tools=toolList(config).map(t=>t.position===selectedPhotoTool.position?{...t,photoId:key}:t);saveMachineConfig(workflowPart,workflowMachineId,config);save();await photoCachePut(key,image);selectedPhotoTool.photoId=key;$('photoImage').src=image;$('photoMessage').textContent='';renderWorkflow();toast('Фото сохранено');}catch(error){toast(error.message);}finally{event.target.disabled=false;event.target.value='';}});
+// Save the photo first, then attach its ID to the latest server-side part
+// in a Firestore transaction. Never report success before both writes complete.
+let photoUploadBusy=false;
+$('photoUpload').addEventListener('change',async event=>{
+ const file=event.target.files[0];
+ if(!file||!selectedPhotoTool||photoUploadBusy)return;
+ if(!canEditProduction()||!cloudReady||!navigator.onLine){toast('Загрузка доступна наладчику с интернетом');return;}
+ const partId=workflowPart?.id;
+ const machineId=workflowMachineId;
+ const position=selectedPhotoTool.position;
+ const existingPhotoId=selectedPhotoTool.photoId;
+ if(!partId||!machineId||!position){toast('Не удалось определить деталь или инструмент');return;}
+ photoUploadBusy=true;
+ event.target.disabled=true;
+ $('photoMessage').textContent='Сохраняем фотографию…';
+ try{
+  const image=await compressPhoto(file);
+  // Use a fresh ID so a failed attachment never overwrites an existing photo.
+  const key=crypto.randomUUID();
+  const photoRef=cloudDb.collection('appData').doc('photo-'+key);
+  await photoRef.set({image,updatedBy:cloudUser.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  // A transaction reads the newest production document and changes only this tool.
+  await cloudDb.runTransaction(async transaction=>{
+   const snapshot=await transaction.get(cloudDataRef);
+   if(!snapshot.exists)throw new Error('Общая база не найдена');
+   const parts=snapshot.data().parts;
+   if(!Array.isArray(parts))throw new Error('Список деталей недоступен');
+   const index=parts.findIndex(part=>part.id===partId);
+   if(index<0)throw new Error('Деталь удалена или недоступна');
+   const part=parts[index];
+   const configs={...(part.machineConfigs||{})};
+   const config=configs[machineId]|| (part.machineId===machineId ? {
+    program:part.program,tools:part.tools,tool:part.tool,cell:part.cell,
+    table1Fixture:part.table1Fixture,table2Fixture:part.table2Fixture,
+    zero:part.zero,coordinates:part.coordinates
+   } : null);
+   if(!config)throw new Error('Настройки станка изменились. Откройте деталь заново');
+   const tools=Array.isArray(config.tools)?config.tools:[];
+   const toolIndex=tools.findIndex(tool=>normalizeToolPosition(tool.position||tool.magazineCell)===position);
+   if(toolIndex<0)throw new Error('Инструмент изменён или удалён. Откройте деталь заново');
+   const updatedTools=tools.map((tool,i)=>i===toolIndex?{...tool,photoId:key}:tool);
+   configs[machineId]={...config,tools:updatedTools};
+   const updatedPart={...part,machineConfigs:configs};
+   // Keep the legacy fields in sync for the primary machine.
+   if(part.machineId===machineId)updatedPart.tools=updatedTools;
+   const updatedParts=[...parts];updatedParts[index]=updatedPart;
+   transaction.update(cloudDataRef,{parts:updatedParts,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:cloudUser.email});
+  });
+  // Update the current view immediately; the Firestore listener will also refresh it.
+  const localPart=data.parts.find(part=>part.id===partId);
+  if(localPart){
+   const config=configFor(localPart,machineId);
+   config.tools=toolList(config).map(tool=>tool.position===position?{...tool,photoId:key}:tool);
+   saveMachineConfig(localPart,machineId,config);
+   if(localPart.machineId===machineId)localPart.tools=config.tools;
+  }
+  if(workflowPart?.id===partId){
+   const config=configFor(workflowPart,machineId);
+   config.tools=toolList(config).map(tool=>tool.position===position?{...tool,photoId:key}:tool);
+   saveMachineConfig(workflowPart,machineId,config);
+   if(workflowPart.machineId===machineId)workflowPart.tools=config.tools;
+  }
+  selectedPhotoTool.photoId=key;
+  $('photoImage').src=image;
+  $('photoMessage').textContent='';
+  renderWorkflow();
+  try{await photoCachePut(key,image);}catch(error){console.warn('Photo cache unavailable',error);}
+  toast('Фото сохранено в общей базе');
+ }catch(error){
+  console.error('Photo upload failed',error);
+  $('photoMessage').textContent='Не удалось сохранить фото: '+(error.message||'ошибка сети');
+  toast('Фото не сохранено: '+(error.message||'проверьте интернет'));
+ }finally{photoUploadBusy=false;event.target.disabled=false;event.target.value='';}
+});
 // Keep photo references when a setter edits the tool list.
 const originalAddToolRow=addToolRow;
 addToolRow=function(tool={}){originalAddToolRow(tool);$('toolRows').lastElementChild.dataset.photoId=tool.photoId||'';};
