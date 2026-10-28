@@ -72,7 +72,7 @@ function resetDefectForm(){ delete $('defectForm').dataset.editId; $('defectDate
 function render(){
   renderTasks();
   const query = $('searchInput').value.trim().toLowerCase(); const machine = $('machineFilter').value;
-  const filtered = data.parts.filter(part => (!query || `${part.name} ${part.code}`.toLowerCase().includes(query)) && (machine === 'all' || part.machineId === machine));
+  const filtered = data.parts.filter(part => (!query || `${part.name} ${part.code}`.toLowerCase().includes(query)) && (machine === 'all' || part.machineId === machine)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru',{sensitivity:'base',numeric:true})||String(a.code||'').localeCompare(String(b.code||''),'ru',{numeric:true}));
   $('partsCount').textContent = data.parts.length; $('machinesCount').textContent = data.machines.length; $('statParts').textContent = data.parts.length; $('statMachines').textContent = data.machines.length; $('resultsLabel').textContent = `${filtered.length} ${filtered.length === 1 ? 'запись' : 'записей'}`;
   $('permissionHint').textContent = role==='foreman'?'Режим бригадира · полный доступ':canEditProduction()?'Режим наладчика · полный доступ':'Режим оператора · просмотр'; $('avatar').textContent = role==='foreman'?'БР':canEditProduction()?'НЛ':'ОП'; document.querySelectorAll('.setter-only').forEach(el => el.classList.toggle('hidden', !canEditProduction()));
   $('partsGrid').innerHTML = filtered.length ? filtered.map(partCard).join('') : '<div class="empty-state">По вашему запросу ничего не найдено.</div>';
