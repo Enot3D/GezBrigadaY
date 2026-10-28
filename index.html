@@ -38,7 +38,7 @@
   <style>@media(max-width:600px){.tools-editor .tool-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 32px!important;gap:8px!important;padding:8px!important}.tools-editor .tool-row .tool-position,.tools-editor .tool-row .tool-type{width:100%!important;min-width:0!important;height:42px!important;font-size:14px!important}.tools-editor .tool-row .tool-detail{grid-column:1/-1!important;width:100%!important;height:46px!important;min-width:0!important;padding:0 12px!important;font-size:16px!important;box-sizing:border-box!important}.tools-editor .tool-row .remove-tool{grid-column:3;grid-row:1;width:32px;height:42px}}</style>
 </head>
 <body>
-  <section class="auth-view" id="authView"><div class="auth-card"><span class="brand-mark">Б</span><p class="eyebrow">ЗАКРЫТАЯ БАЗА ЦЕХА</p><h1>Вход в бригаду</h1><p id="authMessage">Сотруднику — только табельный номер. Администратору — email и пароль.</p><form id="authForm"><label>Код сотрудника или email<input required type="text" id="authEmail" autocomplete="username" inputmode="numeric" placeholder="Например, 482913"></label><label class="hidden">Пароль администратора<input type="password" id="authPassword" autocomplete="current-password" placeholder="Пароль"></label><label id="legacyLogin" class="hidden"><span><input type="checkbox" id="legacyLoginToggle"> Первый вход со старым паролем</span></label><label id="legacyPasswordLabel" class="hidden">Прежний пароль<input id="legacyPassword" type="password" autocomplete="current-password"></label><button class="primary-btn" type="submit">Войти</button></form></div></section>
+  <section class="auth-view" id="authView"><div class="auth-card"><span class="brand-mark">Б</span><p class="eyebrow">ЗАКРЫТАЯ БАЗА ЦЕХА</p><h1>Вход в бригаду</h1><p id="authMessage">Сотруднику — только табельный номер. Администратору — email и пароль.</p><form id="authForm"><label>Код сотрудника или email<input required type="text" id="authEmail" autocomplete="username" inputmode="numeric" placeholder="Например, 482913"></label><label class="hidden">Пароль администратора<input type="password" id="authPassword" autocomplete="current-password" placeholder="Пароль"></label><label id="legacyLogin" class="hidden"><span><input type="checkbox" id="legacyLoginToggle"> Первый вход со старым паролем</span></label><label id="legacyPasswordLabel" class="hidden">Прежний пароль<input id="legacyPassword" type="password" autocomplete="current-password"></label><button class="primary-btn" type="submit">Войти</button><button class="secondary-btn" id="refreshLoginBtn" type="button" style="margin-top:10px;width:100%">↻ Обновить приложение</button></form></div></section>
   <div class="app-shell hidden" id="appShell">
     <aside class="sidebar">
       <div class="brand"><span class="brand-mark">Б</span><div><strong>БРИГАДА</strong><span>цеховая база</span></div></div>
@@ -60,7 +60,7 @@
       <header class="topbar">
         <div class="breadcrumbs"><span>Цех /</span> Производственная база</div>
         <div class="top-actions">
-          <button class="secondary-btn" id="pushToggle" type="button" aria-label="Включить уведомления" title="Включить уведомления" aria-pressed="false">🔕</button><span class="auth-user" id="authUser"></span><button class="secondary-btn logout-btn" id="logoutBtn" type="button">Выйти</button><div class="avatar" id="avatar">ОП</div>
+          <button class="secondary-btn" id="refreshAppBtn" type="button" title="Обновить приложение и очистить кэш сайта" aria-label="Обновить и очистить кэш">↻</button><button class="secondary-btn" id="pushToggle" type="button" aria-label="Включить уведомления" title="Включить уведомления" aria-pressed="false">🔕</button><span class="auth-user" id="authUser"></span><button class="secondary-btn logout-btn" id="logoutBtn" type="button">Выйти</button><div class="avatar" id="avatar">ОП</div>
         </div>
       </header>
 
@@ -86,6 +86,35 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="app.js?v=19"></script><script src="push.js?v=19"></script>
+<script>
+(function(){
+ async function refreshApp(){
+  const buttons=[document.getElementById('refreshAppBtn'),document.getElementById('refreshLoginBtn')].filter(Boolean);
+  buttons.forEach(button=>{button.disabled=true;button.textContent='Обновляем…';});
+  try{
+   // Only remove the app's Cache Storage. Keep Firestore IndexedDB,
+   // authentication, localStorage and saved photo cache untouched.
+   if('caches' in window){
+    const names=await caches.keys();
+    await Promise.all(names.filter(name=>name.startsWith('brigada-shell-')).map(name=>caches.delete(name)));
+   }
+   if('serviceWorker' in navigator){
+    const registration=await navigator.serviceWorker.getRegistration();
+    if(registration)await registration.update();
+   }
+   const url=new URL(location.href);
+   url.searchParams.set('refresh',String(Date.now()));
+   location.replace(url.href);
+  }catch(error){
+   console.error('App refresh failed',error);
+   alert('Не удалось обновить приложение. Проверьте подключение к интернету и повторите.');
+   buttons.forEach(button=>{button.disabled=false;button.textContent='↻ Обновить';});
+  }
+ }
+ document.getElementById('refreshAppBtn')?.addEventListener('click',refreshApp);
+ document.getElementById('refreshLoginBtn')?.addEventListener('click',refreshApp);
+})();
+</script>
 <script>
 (function(){
  if(!('serviceWorker' in navigator))return;
