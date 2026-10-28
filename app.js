@@ -32,7 +32,22 @@ function sortedMachines(){ return [...data.machines].sort((first,second)=>machin
 function machinesForPart(part){ const excluded=new Set(part.excludedMachineIds || []); return sortedMachines().filter(machine=>{ if(excluded.has(machine.id))return false; const config=part.machineConfigs?.[machine.id]; return Boolean(config?.program?.trim()) || (machine.id===part.machineId && Boolean(part.program?.trim())); }); }
 function configFor(part,machineId){ const existing=part.machineConfigs?.[machineId]; if(existing)return existing; const source=part.machineConfigs?.[part.machineId] || {program:part.program,tools:part.tools,tool:part.tool,cell:part.cell}; if(machineId===part.machineId)return {...source,table1Fixture:part.table1Fixture,table2Fixture:part.table2Fixture,zero:part.zero,coordinates:part.coordinates}; return {program:machineById(machineId)?.program || '',tools:(source.tools || toolList(source)).map(tool=>({...tool})),tool:source.tool || '',cell:source.cell || '',table1Fixture:'',table2Fixture:'',zero:'G54 · X0.000 Y0.000 Z0.000',coordinates:blankCoordinates.map(coordinate=>({...coordinate}))}; }
 function saveMachineConfig(part,machineId,config){ part.machineConfigs={...(part.machineConfigs || {}),[machineId]:config}; }
-function activePart(part,machineId){ return {...part,...configFor(part,machineId),table1Fixture:part.table1Fixture || '',table2Fixture:part.table2Fixture || ''}; }
+// Photos belong to a tool within a part, not to its machine magazine position.
+function toolPhotoIdentity(tool){return [String(tool.type||'').trim().toLowerCase(),String(tool.detail||'').trim().toLowerCase().replace(/,/g,'.').replace(/\\s+/g,' ')].join('|');}
+function sharedToolPhoto(part,tool){
+ const identity=toolPhotoIdentity(tool);
+ const sources=[part.tools,...Object.values(part.machineConfigs||{}).map(config=>config.tools)];
+ for(const source of sources){
+  if(!Array.isArray(source))continue;
+  const match=source.find(candidate=>candidate.photoId&&toolPhotoIdentity(candidate)===identity);
+  if(match)return match.photoId;
+ }
+ return null;
+}
+function activePart(part,machineId){
+ const config=configFor(part,machineId);
+ return {...part,...config,tools:toolList(config).map(tool=>({...tool,photoId:sharedToolPhoto(part,tool)||tool.photoId||null})),table1Fixture:config.table1Fixture??part.table1Fixture??'',table2Fixture:config.table2Fixture??part.table2Fixture??''};
+}
 function formatToolDetail(value){ const detail=value.trim(); return /^\d+(?:[.,]\d+)?$/.test(detail) ? `Ø${detail.replace(',', '.')}` : detail; }
 function toolList(part){ const tools=Array.isArray(part.tools) ? part.tools.map(tool=>{const position=normalizeToolPosition(tool.position || tool.magazineCell); return {...tool,position,magazineCell:position};}) : (part.tool || '').split('\n').filter(Boolean).map(line=>{const match=line.match(/^(T\S+)\s*-\s*([^()]+)(?:\s*\((.*)\))?$/); return {position:match?.[1] || '',magazineCell:match?.[1] || '', type:toolTypes.find(type=>(match?.[2] || '').toLowerCase().includes(type.toLowerCase())) || 'Другой инструмент', detail:match?.[3] || match?.[2] || line};}); return tools.sort((first,second)=>(Number(first.position.match(/\d+/)?.[0]) || Number.MAX_SAFE_INTEGER)-(Number(second.position.match(/\d+/)?.[0]) || Number.MAX_SAFE_INTEGER)); }
 function normalizeToolPosition(value){ const digits=String(value || '').replace(/\D/g,''); return digits ? `T${digits}` : ''; }
@@ -239,11 +254,14 @@ $('photoUpload').addEventListener('change',async event=>{
    const tools=Array.isArray(config.tools)?config.tools:[];
    const toolIndex=tools.findIndex(tool=>normalizeToolPosition(tool.position||tool.magazineCell)===position);
    if(toolIndex<0)throw new Error('Инструмент изменён или удалён. Откройте деталь заново');
-   const updatedTools=tools.map((tool,i)=>i===toolIndex?{...tool,photoId:key}:tool);
-   configs[machineId]={...config,tools:updatedTools};
-   const updatedPart={...part,machineConfigs:configs};
-   // Keep the legacy fields in sync for the primary machine.
-   if(part.machineId===machineId)updatedPart.tools=updatedTools;
+   const identity=toolPhotoIdentity(tools[toolIndex]);
+   const attach=items=>Array.isArray(items)?items.map(tool=>toolPhotoIdentity(tool)===identity?{...tool,photoId:key}:tool):items;
+   // Attach to every matching tool for this part, regardless of magazine cell.
+   for(const [id,machineConfig] of Object.entries(configs)){
+    configs[id]={...machineConfig,tools:attach(machineConfig.tools)};
+   }
+   configs[machineId]={...config,tools:attach(tools)};
+   const updatedPart={...part,machineConfigs:configs,tools:attach(part.tools)};
    const updatedParts=[...parts];updatedParts[index]=updatedPart;
    transaction.update(cloudDataRef,{parts:updatedParts,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:cloudUser.email});
   });
@@ -251,13 +269,17 @@ $('photoUpload').addEventListener('change',async event=>{
   const localPart=data.parts.find(part=>part.id===partId);
   if(localPart){
    const config=configFor(localPart,machineId);
-   config.tools=toolList(config).map(tool=>tool.position===position?{...tool,photoId:key}:tool);
+   const identity=toolPhotoIdentity(selectedPhotoTool);
+   config.tools=toolList(config).map(tool=>toolPhotoIdentity(tool)===identity?{...tool,photoId:key}:tool);
+   for(const [id,other] of Object.entries(localPart.machineConfigs||{}))localPart.machineConfigs[id]={...other,tools:Array.isArray(other.tools)?other.tools.map(tool=>toolPhotoIdentity(tool)===identity?{...tool,photoId:key}:tool):other.tools};
+   if(Array.isArray(localPart.tools))localPart.tools=localPart.tools.map(tool=>toolPhotoIdentity(tool)===identity?{...tool,photoId:key}:tool);
    saveMachineConfig(localPart,machineId,config);
    if(localPart.machineId===machineId)localPart.tools=config.tools;
   }
   if(workflowPart?.id===partId){
    const config=configFor(workflowPart,machineId);
-   config.tools=toolList(config).map(tool=>tool.position===position?{...tool,photoId:key}:tool);
+   const identity=toolPhotoIdentity(selectedPhotoTool);
+   config.tools=toolList(config).map(tool=>toolPhotoIdentity(tool)===identity?{...tool,photoId:key}:tool);
    saveMachineConfig(workflowPart,machineId,config);
    if(workflowPart.machineId===machineId)workflowPart.tools=config.tools;
   }
