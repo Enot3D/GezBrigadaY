@@ -246,9 +246,9 @@ $('photoUpload').addEventListener('change',async event=>{
    const part=parts[index];
    const configs={...(part.machineConfigs||{})};
    const config=configs[machineId]|| (part.machineId===machineId ? {
-    program:part.program,tools:part.tools,tool:part.tool,cell:part.cell,
-    table1Fixture:part.table1Fixture,table2Fixture:part.table2Fixture,
-    zero:part.zero,coordinates:part.coordinates
+    program:part.program||'',tools:part.tools||[],tool:part.tool||'',cell:part.cell||'',
+    table1Fixture:part.table1Fixture||'',table2Fixture:part.table2Fixture||'',
+    zero:part.zero||'',coordinates:part.coordinates||[]
    } : null);
    if(!config)throw new Error('Настройки станка изменились. Откройте деталь заново');
    const tools=Array.isArray(config.tools)?config.tools:[];
@@ -261,7 +261,8 @@ $('photoUpload').addEventListener('change',async event=>{
     configs[id]={...machineConfig,tools:attach(machineConfig.tools)};
    }
    configs[machineId]={...config,tools:attach(tools)};
-   const updatedPart={...part,machineConfigs:configs,tools:attach(part.tools)};
+   const updatedPart={...part,machineConfigs:configs};
+   if(Array.isArray(part.tools))updatedPart.tools=attach(part.tools);
    const updatedParts=[...parts];updatedParts[index]=updatedPart;
    transaction.update(cloudDataRef,{parts:updatedParts,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:cloudUser.email});
   });
